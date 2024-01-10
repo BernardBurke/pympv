@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
@@ -9,6 +10,12 @@ OUTPUT_DIR = '/tmp/blood/'
 ydl_options = {
     'outputmpl': OUTPUT_DIR
 }
+
+if sys.argv[1] == '':
+    print ('Need to specify a query string')
+    sys.exit(1)
+
+SEARCH_STRING = sys.argv[1]
 
 URL = "https://heroero.com/search.php?q=" + SEARCH_STRING
 page = requests.get(URL)
