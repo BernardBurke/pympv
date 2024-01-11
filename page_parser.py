@@ -21,13 +21,23 @@ URL = "https://heroero.com/search.php?q=" + SEARCH_STRING
 page = requests.get(URL)
 soup = BeautifulSoup(page.content, "html.parser")
 
+    
+
 def get_base(ID):
     LEN = len(ID) - 1
     STR_ID = str(ID)
     TOP_RANGE = STR_ID[:-LEN]
+    NEXT_LEN = LEN - 1
+    NEXT_DIGIT = STR_ID[1:-NEXT_LEN]
     ZERO_FILL = "0" * LEN
     RANGE = TOP_RANGE + ZERO_FILL
     #print (TOP_RANGE)
+    if int(RANGE) > 9999:
+        #print ('Fixing range')
+        #print (f'NEXT_DIGIT = {NEXT_DIGIT}')
+        ZERO_FILL = "0" * (LEN - 1)
+        RANGE=TOP_RANGE + NEXT_DIGIT + ZERO_FILL
+        print(RANGE)
     return RANGE
 
 def parse_identifier(FULL_PATH):
