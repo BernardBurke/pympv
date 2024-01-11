@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
 import sys
+import os
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import yt_dlp
-SEARCH_STRING = 'true-blood'
-OUTPUT_DIR = '/tmp/blood/'
+OUTPUT_DIR = '/tmp/'
+
+try:
+    TARGET_PATH = os.environ["SCREEN_TARGET_PATH"]
+except KeyError:
+    print('SCREEN_TARGET_PATH not defined')
+    sys.exit(1)
+
+
+if os.path.exists(TARGET_PATH):
+    TARGET_DIR = TARGET_PATH
+else:
+    print('No target path defined for TARGET_PATH')
+    sys.exit(1)
 
 ydl_options = {
     'outputmpl': OUTPUT_DIR
@@ -49,14 +62,18 @@ def parse_identifier(FULL_PATH):
     VIDEO_URL = "https://heroero.com/movie/" + BASE_RANGE + "/" + ID + "/" + ID + ".mp4"
     YTDL_COMMAND = "yt-dlp " + VIDEO_URL + " --output /tmp/blood/" + VIDEO_NAME + ".mp4"
     #print(f"{ID} {BASE_RANGE} {VIDEO_NAME}")
-    return YTDL_COMMAND
+    return YTDL_COMMAND , VIDEO_NAME
 
 for a in soup.find_all('a', href=True):
     THIS_HREF = a['href']
     if SEARCH_STRING in THIS_HREF:
-        THIS_URL=parse_identifier(THIS_HREF)
-        #print(f"yt-dlp {THIS_URL} -o /tmp/blood/")
-        print(THIS_URL)
-        #with yt_dlp.YoutubeDL(ydl_options) as ydl:
-        #    ydl.download(THIS_URL)
-        #print("Found the URL:", a['href'])
+        THIS_YTDL, VIDEO_NAME = parse_identifier(THIS_HREF)
+        VIDEO_PATH = TARGET_DIR + VIDEO_NAME + ".mp4"
+        if os.path.isfile(VIDEO_PATH):
+            print(f"{VIDEO_PATH} already exists")
+        else:
+            #print(f"yt-dlp {THIS_URL} -o /tmp/blood/")
+            print(THIS_YTDL)
+            #with yt_dlp.YoutubeDL(ydl_options) as ydl:
+            #    ydl.download(THIS_URL)
+            #print("Found the URL:", a['href'])
