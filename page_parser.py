@@ -84,23 +84,18 @@ def parse_identifier(FULL_PATH):
     #print(f"{ID} {BASE_RANGE} {VIDEO_NAME}")
     return YTDL_COMMAND , VIDEO_NAME, VIDEO_URL
 
-def fill_in_the_blanks(VIDEO_PATH, THIS_YTDL):
-    os.system(THIS_YTDL)
-    if os.path.isfile(VIDEO_PATH):
-        print(f"{VIDEO_PATH}  successfully downloaded")
-    else:
-        print(f"{VIDEO_PATH} failed to download")
 
 def play_accept_cleanup(OUTPUT_TEMPFILE, VIDEO_PATH):
     player = mpv.MPV(input_default_bindings=True, input_vo_keyboard=True, osc=True)
     player.volume = 20
+    player.screen = 1
     player.play(OUTPUT_TEMPFILE)
     player.wait_for_playback()
     answer = input(f"Keep {OUTPUT_TEMPFILE} video file as {VIDEO_PATH} ? (yes/no)")
     # Remove white spaces after the answers and convert the characters into lower cases.
     answer = answer.strip().lower()
     
-    if answer in ["yes", "y", "1"]:
+    if answer in ["yes", "y", "1", ""]:
         shutil.copy(OUTPUT_TEMPFILE, VIDEO_PATH)
         print(f"{VIDEO_PATH} successfully downloaded and copied")
     elif answer in ["no", "n", "0"]:
@@ -123,9 +118,17 @@ def download_video(VIDEO_URL,VIDEO_NAME, VIDEO_PATH):
 
     ydl = yt_dlp.YoutubeDL(ydl_options)
 
+    try:
+        ydl.download(VIDEO_URL)
+    except KeyboardInterrupt:
+        return
+    except:
+        print(f"Call to ytdl with {VIDEO_URL} failed")
+        return
+
+
     print(f"{VIDEO_URL} will be downloaded")
 
-    ydl.download(VIDEO_URL)
 
     if os.path.isfile(OUTPUT_TEMPFILE):
          print(f"{VIDEO_NAME}  successfully downloaded")
@@ -147,10 +150,6 @@ for a in soup.find_all('a', href=True):
             FILE_HANDLE = open(OUTPUT_FILENAME, 'a')
             FILE_HANDLE.write(THIS_YTDL +"\n")
             download_video(VIDEO_URL, VIDEO_NAME, VIDEO_PATH)
-            #fill_in_the_blanks(VIDEO_PATH, THIS_YTDL)
-            #with yt_dlp.YoutubeDL(ydl_options) as ydl:
-            #    ydl.download(THIS_URL)
-            #print("Found the URL:", a['href'])
 
 try:
     FILE_HANDLE.close()
