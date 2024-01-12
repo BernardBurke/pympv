@@ -6,6 +6,9 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import yt_dlp
+import mpv
+import shutil
+
 OUTPUT_DIR = '/tmp/'
 OUTPUT_FILENAME = OUTPUT_DIR + 'get.sh'
 
@@ -79,7 +82,7 @@ def parse_identifier(FULL_PATH):
     VIDEO_URL = "https://heroero.com/movie/" + BASE_RANGE + "/" + ID + "/" + ID + ".mp4"
     YTDL_COMMAND = "yt-dlp " + VIDEO_URL + " --output /tmp/doolb/" + VIDEO_NAME + ".mp4"
     #print(f"{ID} {BASE_RANGE} {VIDEO_NAME}")
-    return YTDL_COMMAND , VIDEO_NAME
+    return YTDL_COMMAND , VIDEO_NAME, VIDEO_URL
 
 def fill_in_the_blanks(VIDEO_PATH, THIS_YTDL):
     os.system(THIS_YTDL)
@@ -88,10 +91,54 @@ def fill_in_the_blanks(VIDEO_PATH, THIS_YTDL):
     else:
         print(f"{VIDEO_PATH} failed to download")
 
+def play_accept_cleanup(OUTPUT_TEMPFILE, VIDEO_PATH):
+    player = mpv.MPV(input_default_bindings=True, input_vo_keyboard=True, osc=True)
+    player.volume = 20
+    player.play(OUTPUT_TEMPFILE)
+    player.wait_for_playback()
+    answer = input(f"Keep {OUTPUT_TEMPFILE} video file as {VIDEO_PATH} ? (yes/no)")
+    # Remove white spaces after the answers and convert the characters into lower cases.
+    answer = answer.strip().lower()
+    
+    if answer in ["yes", "y", "1"]:
+        shutil.copy(OUTPUT_TEMPFILE, VIDEO_PATH)
+        print(f"{VIDEO_PATH} successfully downloaded and copied")
+    elif answer in ["no", "n", "0"]:
+        print('You answered no.') # or do something else
+    else:
+        print(f"Your answer can only be yes/y/1 or no/n/0. You answered {answer}")
+
+
+def download_video(VIDEO_URL,VIDEO_NAME, VIDEO_PATH):
+    TF = tempfile.NamedTemporaryFile()
+    OUTPUT_TEMPFILE = TF.name
+
+    # yt-dlp will create the output file and fail if it exists already... workaround is to delete temporary
+
+    os.remove(OUTPUT_TEMPFILE)
+
+    ydl_options = {
+         'outtmpl': OUTPUT_TEMPFILE,
+    }
+
+    ydl = yt_dlp.YoutubeDL(ydl_options)
+
+    print(f"{VIDEO_URL} will be downloaded")
+
+    ydl.download(VIDEO_URL)
+
+    if os.path.isfile(OUTPUT_TEMPFILE):
+         print(f"{VIDEO_NAME}  successfully downloaded")
+         play_accept_cleanup(OUTPUT_TEMPFILE,VIDEO_PATH)
+    else:
+        print(f"{VIDEO_PATH} failed to download")
+
+
+
 for a in soup.find_all('a', href=True):
     THIS_HREF = a['href']
     if SEARCH_STRING in THIS_HREF:
-        THIS_YTDL, VIDEO_NAME = parse_identifier(THIS_HREF)
+        THIS_YTDL, VIDEO_NAME, VIDEO_URL = parse_identifier(THIS_HREF)
         VIDEO_PATH = TARGET_DIR + VIDEO_NAME + ".mp4"
         if os.path.isfile(VIDEO_PATH):
             print(f"{VIDEO_PATH} already exists")
@@ -99,9 +146,13 @@ for a in soup.find_all('a', href=True):
             #print(f"yt-dlp {THIS_URL} -o /tmp/blood/")
             FILE_HANDLE = open(OUTPUT_FILENAME, 'a')
             FILE_HANDLE.write(THIS_YTDL +"\n")
-            fill_in_the_blanks(VIDEO_PATH, THIS_YTDL)
+            download_video(VIDEO_URL, VIDEO_NAME, VIDEO_PATH)
+            #fill_in_the_blanks(VIDEO_PATH, THIS_YTDL)
             #with yt_dlp.YoutubeDL(ydl_options) as ydl:
             #    ydl.download(THIS_URL)
             #print("Found the URL:", a['href'])
 
-FILE_HANDLE.close()
+try:
+    FILE_HANDLE.close()
+except NameError:
+    print("No file to close.")
