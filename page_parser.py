@@ -81,6 +81,13 @@ def parse_identifier(FULL_PATH):
     #print(f"{ID} {BASE_RANGE} {VIDEO_NAME}")
     return YTDL_COMMAND , VIDEO_NAME
 
+def fill_in_the_blanks(VIDEO_PATH, THIS_YTDL):
+    os.system(THIS_YTDL)
+    if os.path.isfile(VIDEO_PATH):
+        print(f"{VIDEO_PATH}  successfully downloaded")
+    else:
+        print(f"{VIDEO_PATH} failed to download")
+
 for a in soup.find_all('a', href=True):
     THIS_HREF = a['href']
     if SEARCH_STRING in THIS_HREF:
@@ -92,6 +99,7 @@ for a in soup.find_all('a', href=True):
             #print(f"yt-dlp {THIS_URL} -o /tmp/blood/")
             FILE_HANDLE = open(OUTPUT_FILENAME, 'a')
             FILE_HANDLE.write(THIS_YTDL +"\n")
+            fill_in_the_blanks(VIDEO_PATH, THIS_YTDL)
             #with yt_dlp.YoutubeDL(ydl_options) as ydl:
             #    ydl.download(THIS_URL)
             #print("Found the URL:", a['href'])
