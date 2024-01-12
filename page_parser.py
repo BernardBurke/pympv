@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 import sys
 import os
+import tempfile
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import yt_dlp
 OUTPUT_DIR = '/tmp/'
+OUTPUT_FILENAME = OUTPUT_DIR + 'get.sh'
+
+if os.path.isfile(OUTPUT_FILENAME):
+    TF = tempfile.NamedTemporaryFile()
+    OUTPUT_TEMPFILE = TF.name
+    print(f" renaming {OUTPUT_FILENAME} to {OUTPUT_TEMPFILE}")
+    os.rename( OUTPUT_FILENAME, OUTPUT_TEMPFILE )
 
 try:
     TARGET_PATH = os.environ["SCREEN_TARGET_PATH"]
@@ -24,13 +32,20 @@ ydl_options = {
     'outputmpl': OUTPUT_DIR
 }
 
-if sys.argv[1] == '':
+if len(sys.argv) < 2:
     print ('Need to specify a query string')
     sys.exit(1)
 
+
+
 SEARCH_STRING = sys.argv[1]
 
-URL = "https://heroero.com/search.php?q=" + SEARCH_STRING
+if len(sys.argv) < 3:
+    URL = "https://heroero.com/search.php?q=" + SEARCH_STRING    
+else:
+    URL = sys.argv[2]
+    SEARCH_STRING = sys.argv[1]
+
 page = requests.get(URL)
 soup = BeautifulSoup(page.content, "html.parser")
 
@@ -50,17 +65,19 @@ def get_base(ID):
         #print (f'NEXT_DIGIT = {NEXT_DIGIT}')
         ZERO_FILL = "0" * (LEN - 1)
         RANGE=TOP_RANGE + NEXT_DIGIT + ZERO_FILL
-        print(RANGE)
+        #print(RANGE)
     return RANGE
 
 def parse_identifier(FULL_PATH):
+    print(f"Path: {FULL_PATH}")
     path=urlparse(FULL_PATH).path
+    print(f"Path: {path}")
     chunks=path.split('/')
     ID=chunks[2]
     BASE_RANGE=get_base(ID)
     VIDEO_NAME=chunks[3]
     VIDEO_URL = "https://heroero.com/movie/" + BASE_RANGE + "/" + ID + "/" + ID + ".mp4"
-    YTDL_COMMAND = "yt-dlp " + VIDEO_URL + " --output /tmp/blood/" + VIDEO_NAME + ".mp4"
+    YTDL_COMMAND = "yt-dlp " + VIDEO_URL + " --output /tmp/doolb/" + VIDEO_NAME + ".mp4"
     #print(f"{ID} {BASE_RANGE} {VIDEO_NAME}")
     return YTDL_COMMAND , VIDEO_NAME
 
@@ -73,7 +90,10 @@ for a in soup.find_all('a', href=True):
             print(f"{VIDEO_PATH} already exists")
         else:
             #print(f"yt-dlp {THIS_URL} -o /tmp/blood/")
-            print(THIS_YTDL)
+            FILE_HANDLE = open(OUTPUT_FILENAME, 'a')
+            FILE_HANDLE.write(THIS_YTDL +"\n")
             #with yt_dlp.YoutubeDL(ydl_options) as ydl:
             #    ydl.download(THIS_URL)
             #print("Found the URL:", a['href'])
+
+FILE_HANDLE.close()
