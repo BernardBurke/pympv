@@ -135,7 +135,10 @@ FQDN = "https://www.aznude.com"
 MOVIE_NAME = sys.argv[1]
 first_characters = MOVIE_NAME[0]
 SEARCH_STRING = FQDN + "/view/movie/" + first_characters + "/" + MOVIE_NAME + ".html"
+MOVIE_NAME = MOVIE_NAME.split('-')
+MOVIE_NAME = MOVIE_NAME[0]
 
+                   
 print(SEARCH_STRING) 
 
 def get_child(HREF):
