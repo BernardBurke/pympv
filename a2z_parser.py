@@ -141,6 +141,31 @@ MOVIE_NAME = MOVIE_NAME[0]
                    
 print(SEARCH_STRING) 
 
+
+def switch_cdn(child_href):
+    cdn_style = child_href.split('/')
+
+    print(f"Length of cdn style is {len(cdn_style)}")
+
+    if len(cdn_style) == 5:
+        print(f"I am a azncdn style cdn {len(cdn_style)} {child_href}")
+        movieSeparator = '/' + MOVIE_NAME 
+        actorName = ""
+        fname = cdn_style[4]
+    else:
+        print(f"I am a skin cdn style")
+        movieSeparator = MOVIE_NAME + '/' 
+        #actorName = cdn_style[3]
+        #fname = actorName + '-' + cdn_style[5]
+        fname = cdn_style[5]
+        print(f" my child href is {len(cdn_style)} {child_href}") 
+    top_of_path = urlparse(child_href).path
+    add_proto = "https:" + child_href
+    #fname = MOVIE_NAME +  "-" + actorName + "-" + fname
+    print(f" I created {fname} and will pull from {add_proto}")
+    download_video(add_proto, fname)
+
+
 def get_child(HREF):
     # print(f"{HREF}")
     # top_of_path = urlparse(HREF).path
@@ -153,15 +178,26 @@ def get_child(HREF):
     for a in soup.find_all('a', href=True):
         next_href = a['href']
         if ".mp4" in next_href:
-            temp_movie = MOVIE_NAME + "/"
-            chunks = next_href.split(temp_movie)
-            chumps = next_href.split('/')
-            actor = chumps[3]
-            print(f"{actor} actor")
-            add_proto = "https:" + next_href
-            fname = MOVIE_NAME +  "-" + actor + "-" + chunks[1] 
-            print(add_proto, fname)
-            download_video(add_proto, fname)
+            print(f"{next_href} is sent")
+            switch_cdn(next_href)
+            # temp_movie = MOVIE_NAME + "/"
+            # print(f"Next {next_href}")
+            # print(f"tempmovie {temp_movie} ")
+            # chunks = next_href.split(temp_movie)
+            # print(f"length of chunks {len(chunks)}")
+            # #print(f"Fetching {chunks[1]}")
+            # chumps = next_href.split('/')
+            # print(f" Length: {len(chunks)} chunks and {len(chumps)} chumps")
+            # actor = chumps[3]
+            # print(f"{actor} actor")
+            # add_proto = "https:" + next_href
+            # if ( len(chunks) == 2 and len(chumps) == 6 ):
+            #     fname = MOVIE_NAME +  "-" + actor + "-" + chunks[1] 
+            # print(add_proto, fname)
+
+            #     download_video(add_proto, fname)
+            # else:
+            #     print(f"Skip downloading for strangely formatted Chunks")
 
 page = requests.get(SEARCH_STRING)
 soup = BeautifulSoup(page.content, "html.parser")
