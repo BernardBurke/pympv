@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import yt_dlp
 import mpv
 import shutil
+from pathlib import Path
 
 OUTPUT_DIR = '/tmp/'
 OUTPUT_FILENAME = OUTPUT_DIR + 'get.sh'
@@ -25,6 +26,7 @@ except KeyError:
     sys.exit(1)
 
 
+
 if os.path.exists(TARGET_PATH):
     TARGET_DIR = TARGET_PATH
 else:
@@ -38,10 +40,15 @@ ydl_options = {
 if len(sys.argv) < 2:
     print ('Need to specify a query string')
     sys.exit(1)
+else:
+    print(f"Running query {sys.argv[1]}")
 
-
-
-SEARCH_STRING = sys.argv[1]
+if os.path.exists(sys.argv[1]):
+    print ('Operating in File Mode')
+    FILE_MODE = True
+    SEARCH_STRING = Path(sys.argv[1]).stem
+else:
+    SEARCH_STRING = sys.argv[1]
 
 if len(sys.argv) < 3:
     URL = "https://heroero.com/search.php?q=" + SEARCH_STRING    
@@ -88,18 +95,19 @@ def parse_identifier(FULL_PATH):
 def play_accept_cleanup(OUTPUT_TEMPFILE, VIDEO_PATH):
     player = mpv.MPV(input_default_bindings=True, input_vo_keyboard=True, osc=True)
     player.volume = 20
-    player.screen = 2
+    player.screen = 1
     player.play(OUTPUT_TEMPFILE)
     player.wait_for_playback()
-    answer = input(f"Keep {OUTPUT_TEMPFILE} video file as {VIDEO_PATH} ? (yes/no)")
+    answer = input(f"Keep {OUTPUT_TEMPFILE} video file as {VIDEO_PATH} ? ([yes]/no)")
     # Remove white spaces after the answers and convert the characters into lower cases.
     answer = answer.strip().lower()
     
     if answer in ["yes", "y", "1", ""]:
-        shutil.copy(OUTPUT_TEMPFILE, VIDEO_PATH)
+        shutil.move(OUTPUT_TEMPFILE, VIDEO_PATH)
         print(f"{VIDEO_PATH} successfully downloaded and copied")
     elif answer in ["no", "n", "0"]:
         print('You answered no.') # or do something else
+        os.remove(OUTPUT_TEMPFILE)
     else:
         print(f"Your answer can only be yes/y/1 or no/n/0. You answered {answer}")
 
@@ -143,13 +151,22 @@ for a in soup.find_all('a', href=True):
     if SEARCH_STRING in THIS_HREF:
         THIS_YTDL, VIDEO_NAME, VIDEO_URL = parse_identifier(THIS_HREF)
         VIDEO_PATH = TARGET_DIR + VIDEO_NAME + ".mp4"
-        if os.path.isfile(VIDEO_PATH):
-            print(f"{VIDEO_PATH} already exists")
+        if FILE_MODE == True:
+            play_accept_cleanup(sys.argv[1], VIDEO_PATH)
+            # answer = input(f"Keep {sys.argv[1]} video file as {VIDEO_PATH} ? (yes/no)")
+            # # Remove white spaces after the answers and convert the characters into lower cases.
+            # answer = answer.strip().lower()
+            # if answer in ["yes", "y", "1", ""]:
+            #     shutil.move(sys.argv[1], VIDEO_PATH)
+            #     print(f"{VIDEO_PATH} successfully Moved to video directory")
         else:
-            #print(f"yt-dlp {THIS_URL} -o /tmp/blood/")
-            FILE_HANDLE = open(OUTPUT_FILENAME, 'a')
-            FILE_HANDLE.write(THIS_YTDL +"\n")
-            download_video(VIDEO_URL, VIDEO_NAME, VIDEO_PATH)
+            if os.path.isfile(VIDEO_PATH):
+                print(f"{VIDEO_PATH} already exists")
+            else:
+                #print(f"yt-dlp {THIS_URL} -o /tmp/blood/")
+                FILE_HANDLE = open(OUTPUT_FILENAME, 'a')
+                FILE_HANDLE.write(THIS_YTDL +"\n")
+                download_video(VIDEO_URL, VIDEO_NAME, VIDEO_PATH)
 
 try:
     FILE_HANDLE.close()
