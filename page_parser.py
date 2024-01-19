@@ -49,6 +49,7 @@ if os.path.exists(sys.argv[1]):
     SEARCH_STRING = Path(sys.argv[1]).stem
 else:
     SEARCH_STRING = sys.argv[1]
+    FILE_MODE = False
 
 if len(sys.argv) < 3:
     URL = "https://heroero.com/search.php?q=" + SEARCH_STRING    
@@ -160,6 +161,7 @@ for a in soup.find_all('a', href=True):
             #     shutil.move(sys.argv[1], VIDEO_PATH)
             #     print(f"{VIDEO_PATH} successfully Moved to video directory")
         else:
+            FILE_MODE = False
             if os.path.isfile(VIDEO_PATH):
                 print(f"{VIDEO_PATH} already exists")
             else:
