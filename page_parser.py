@@ -9,6 +9,24 @@ import yt_dlp
 import mpv
 import shutil
 from pathlib import Path
+import signal
+import time
+import readchar
+
+def handler(signum, frame):
+    msg = "Ctrl-c was pressed. Do you really want to exit? y/n "
+    print(msg, end="", flush=True)
+    res = readchar.readchar()
+    if res == 'y':
+        print("")
+        exit(1)
+    else:
+        print("", end="\r", flush=True)
+        print(" " * len(msg), end="", flush=True) # clear the printed line
+        print("    ", end="\r", flush=True)
+ 
+ 
+signal.signal(signal.SIGINT, handler)
 
 OUTPUT_DIR = '/tmp/'
 OUTPUT_FILENAME = OUTPUT_DIR + 'get.sh'
@@ -99,7 +117,7 @@ def play_accept_cleanup(OUTPUT_TEMPFILE, VIDEO_PATH):
     player.screen = 1
     player.play(OUTPUT_TEMPFILE)
     player.wait_for_playback()
-    answer = input(f"Keep {OUTPUT_TEMPFILE} video file as {VIDEO_PATH} ? ([yes]/no)")
+    answer = input(f"Keep {OUTPUT_TEMPFILE} video file as {VIDEO_PATH} ? ([yes]/no or eXit)")
     # Remove white spaces after the answers and convert the characters into lower cases.
     answer = answer.strip().lower()
     
@@ -109,6 +127,8 @@ def play_accept_cleanup(OUTPUT_TEMPFILE, VIDEO_PATH):
     elif answer in ["no", "n", "0"]:
         print('You answered no.') # or do something else
         os.remove(OUTPUT_TEMPFILE)
+    elif answer in ["e", "E", "x", "X"]:
+        sys.exit(1)
     else:
         print(f"Your answer can only be yes/y/1 or no/n/0. You answered {answer}")
 
