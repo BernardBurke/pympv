@@ -134,7 +134,11 @@ def download_video(vURL, filename):
 FQDN = "https://www.aznude.com"
 MOVIE_NAME = sys.argv[1]
 first_characters = MOVIE_NAME[0]
-SEARCH_STRING = FQDN + "/view/movie/" + first_characters + "/" + MOVIE_NAME + ".html"
+if len(sys.argv) > 2:
+    if sys.argv[2] == 'celeb':
+        SEARCH_STRING = FQDN + "/view/celeb/" + first_characters + "/" + MOVIE_NAME + ".html"
+else:
+    SEARCH_STRING = FQDN + "/view/movie/" + first_characters + "/" + MOVIE_NAME + ".html"
 MOVIE_NAME = MOVIE_NAME.split('-')
 MOVIE_NAME = MOVIE_NAME[0]
 
