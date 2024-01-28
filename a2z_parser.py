@@ -206,14 +206,24 @@ def get_child(HREF):
 page = requests.get(SEARCH_STRING)
 soup = BeautifulSoup(page.content, "html.parser")
 
-    
+ANYTHING_FOUND = False    
 
 for a in soup.find_all('a', href=True):
     
     THIS_HREF = a['href']
+    #print(f"Processing {THIS_HREF} and looking for {MOVIE_NAME}")
     if MOVIE_NAME in THIS_HREF:
         if ".html" in THIS_HREF:
+            ANYTHING_FOUND = True
             get_child(THIS_HREF)
+    if not ANYTHING_FOUND:
+        #print(f"I didn't find anything - looking for anzcdn")
+        if "/azncdn" in THIS_HREF:
+            print(f"Fixup for {THIS_HREF}")
+            if ".html" in THIS_HREF:
+                ANYTHING_FOUND = True
+                get_child(THIS_HREF)
+
             #print(f"This page is is {THIS_HREF}")
     # if SEARCH_STRING in THIS_HREF:
     #     THIS_YTDL, VIDEO_NAME, VIDEO_URL = parse_identifier(THIS_HREF)
