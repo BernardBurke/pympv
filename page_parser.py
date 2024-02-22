@@ -114,7 +114,8 @@ def parse_identifier(FULL_PATH):
 def play_accept_cleanup(OUTPUT_TEMPFILE, VIDEO_PATH):
     player = mpv.MPV(input_default_bindings=True, input_vo_keyboard=True, osc=True)
     player.volume = 20
-    player.screen = 1
+    # player.screen = 1
+    player.fullscreen = True
     player.play(OUTPUT_TEMPFILE)
     player.wait_for_playback()
     answer = input(f"Keep {OUTPUT_TEMPFILE} video file as {VIDEO_PATH} ? ([yes]/no or eXit)")
