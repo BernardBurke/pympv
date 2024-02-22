@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# this is broken https://www.aznude.com/view/movie/p/pierwszamilosc.html
 import sys
 import os
 import tempfile
