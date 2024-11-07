@@ -44,3 +44,19 @@ print(f"UserID: {UserID} now walking the path of the media folder")
 r = requests.get(server_url + '/Library/MediaFolders', headers=headers)
 r.raise_for_status()
 log_json(r.json())
+
+collections = r.json()['Items']
+
+for collection in collections:
+    print(f"CollectionType: {collection['CollectionType']}")
+    #when the collection type is "shows" call walk_shows function passing the collection['Id']. When the collection type is "movies" call walk_movies function passing the collection['Id']
+    if collection['CollectionType'] == "shows":
+        print("Walking shows")
+    elif collection['CollectionType'] == "movies":
+        print("Walking movies")
+    else:
+        print("Unknown CollectionType")
+
+# each folder has an CollectionType, Path, and Id. Print out CollectionType and Path and Id
+#for folder in r.json("Item"):
+#    print(f"CollectionType: {folder['CollectionType']}, Path: {folder['Path']}, Id: {folder['Id']}")
