@@ -24,6 +24,7 @@ def req(endpoint):
         "Authorization": f"MediaBrowser Token=\"{JELLYFIN_API_KEY}\""
     }
     url = f"{JELLYFIN_HOST}{endpoint}"
+    print(f"Requesting: {url}")
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     return response.json()
@@ -61,7 +62,7 @@ def main():
                 print(f"Getting series IDs for library {lib_id}")
                 series_data = req(f"/Items?isSeries=true&userId={user_id}&parentId={lib_id}")
                 series_ids_names = [(series["Id"], series["Name"]) for series in series_data["Items"]]
-
+                print(f"Found {len(series_ids_names)} series")
                 for series_id, series_name in series_ids_names:
                     episodes_data = req(f"/Shows/{series_id}/Episodes?userId={user_id}&fields=Path")
 
