@@ -32,8 +32,8 @@ def log_json(data, message=">"):
 
 # a general purpose logger for json that only logs output when the environment variable DEBUG is set to True
 def log_general(message=">"):
-    if os.environ.get('DEBUG') == 'True':
-        print(message)
+    #if os.environ.get('DEBUG') == 'True':
+    print(f"{message}")
         
 
 
@@ -44,7 +44,7 @@ def req(endpoint):
         "Authorization": f"MediaBrowser Token=\"{JELLYFIN_API_KEY}\""
     }
     url = f"{JELLYFIN_HOST}{endpoint}"
-    log_general(f"Requesting: {url}")
+    #log_general(f"Requesting: {url}")
 
     response = requests.get(url, headers=headers)
     response.raise_for_status()  # Raise an exception for bad status codes
@@ -72,17 +72,38 @@ def main():
     # Get series IDs
     log_general("Getting series IDs")
     series_data = req(f"/Items?isSeries=true&userId={user_id}&parentId={lib_id}")
-    series_ids = [series["Id"] for series in series_data["Items"]]
+    #log_json(series_data["Items"])
 
-    for series_id in series_ids:
+    #input("Press Enter to continue...")
+
+    series_ids_names = [(series["Id"], series["Name"]) for series in series_data["Items"]]
+#    series_ids = [series_id for series_id, _ in series_ids_names]
+
+    log_general(f"Series IDs: {series_ids_names}")
+
+    # pause before continuing
+    #input("Press Enter to continue...")
+
+
+    #for series_id in series_ids:
+    for series_id, series_name in series_ids_names:
+        print(f"Processing series '{series_name}' (ID: {series_id})")
+
+        #input("Press Enter to continue...")
+
         episodes_data = req(f"/Shows/{series_id}/Episodes?userId={user_id}&fields=DateCreated,Path")
-        log_json(episodes_data)
+
+        #log_json(episodes_data)
 
         # Group episodes by season and episode number
         log_general("Grouping episodes by season and episode number")
         episodes_by_season_episode = {}
         for episode in episodes_data["Items"]:
-            key = (episode["ParentIndexNumber"], episode["IndexNumber"])
+            try:
+                key = (episode["ParentIndexNumber"], episode["IndexNumber"])
+            except KeyError as e:
+                print(f"KeyError: {e} in episode {episode}")
+                continue
             episodes_by_season_episode.setdefault(key, []).append(episode)
 
         # Find duplicates (episodes with the same season and episode number)
@@ -99,7 +120,11 @@ def main():
                 # Sort duplicates by creation date
                 dupe_episodes.sort(key=lambda x: x["DateCreated"])
                 for episode in dupe_episodes:
-                    date_created = datetime.fromisoformat(episode["DateCreated"].replace('Z', '+00:00')).isoformat()
+                    try:
+                        date_created = datetime.fromisoformat(episode["DateCreated"].replace('Z', '+00:00')).isoformat()
+                    except (ValueError, KeyError) as e:
+                        print(f"Error parsing date for episode {episode}: {e}")
+                        date_created = "1970-01-01T00:00:00"
                     print(f"  - {date_created}: {episode['Path']}")
 
 if __name__ == "__main__":
