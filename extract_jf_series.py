@@ -11,25 +11,16 @@ seen_episodes = collections.defaultdict(set)
 
 def find_duplicates(series_name, episode_name, episode_path, outfile_duplicates):
   """
-  Identifies and writes duplicate series and episode names to a file.
+  Stores episode information for later duplicate detection.
 
   Args:
     series_name: The name of the series.
     episode_name: The name of the episode.
     episode_path: The path to the episode file.
-    outfile_duplicates: File object for writing duplicates.
+    outfile_duplicates: File object for writing duplicates (not used here).
   """
-
   episode_key = (series_name, episode_name)
-  
-  # Add the current episode path to the set
   seen_episodes[episode_key].add(episode_path)
-
-  # Check if there are multiple paths for the same episode key
-  if len(seen_episodes[episode_key]) > 1:  
-      outfile_duplicates.write(f"Duplicate found: {series_name} - {episode_name}\n")
-      for path in seen_episodes[episode_key]:
-          outfile_duplicates.write(f"  - {path}\n")
 
 def log_json(data, message=">"):
     if os.environ.get('DEBUG') == 'True':
@@ -108,6 +99,20 @@ def main():
                     for episode in episodes_data["Items"]:
                         outfile.write(f"{series_name}\t{episode['Name']}\t{episode['Path']}\n")
                         find_duplicates(series_name, episode['Name'], episode['Path'],output_duplicates) 
+
+                print(f"Finished processing library {lib_id}, sorting and finding duplicates...")
+                sorted_episodes = sorted(seen_episodes.items())  # Sort by episode_key
+                print(f"Found {len(sorted_episodes)} unique episodes.")
+                for episode_key, paths in sorted_episodes:
+                    outfile.write(f"{episode_key[0]}\t{episode_key[1]}\t{', '.join(paths)}\n")
+                # Now iterate through the sorted items and find duplicates
+                prev_episode_key = None
+                for episode_key, paths in sorted_episodes:
+                    if episode_key == prev_episode_key:
+                        output_duplicates.write(f"Duplicate found: {episode_key[0]} - {episode_key[1]}\n")
+                        for path in paths:
+                            output_duplicates.write(f"  - {path}\n")
+                            prev_episode_key = episode_key 
 
 
     except requests.exceptions.RequestException as e:
