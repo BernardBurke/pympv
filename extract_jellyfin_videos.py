@@ -5,11 +5,13 @@ import collections
 
 # Configuration (get values from environment variables)
 JELLYFIN_SHOWS_LIB_TYPE = "tvshows"
+JELLYFIN_MOVIES_LIB_TYPE = "movies"
 
 seen_episodes = collections.defaultdict(set)  
+seen_movies = collections.defaultdict(set)
 
 
-def find_duplicates(series_name, season_name, episode_name, episode_path, outfile_duplicates):
+def find_duplicates_shows(series_name, season_name, episode_name, episode_path, outfile_duplicates):
   """
   Stores episode information for later duplicate detection.
 
@@ -51,7 +53,7 @@ def req(endpoint):
     response.raise_for_status()
     return response.json()
 
-def main():
+def main_shows():
     """
     Fetches TV show episode information from multiple libraries 
     and writes it to a CSV file.
@@ -107,7 +109,7 @@ def main():
 
                     for episode in episodes_data["Items"]:
                         outfile.write(f"{series_name}\t{season_name}\t{episode['Name']}\t{episode['Path']}\n")
-                        find_duplicates(series_name, season_name, episode['Name'], episode['Path'],output_duplicates) 
+                        find_duplicates_shows(series_name, season_name, episode['Name'], episode['Path'],output_duplicates) 
 
                 print(f"Finished processing library {lib_id}, sorting and finding duplicates...")
                 sorted_episodes = sorted(seen_episodes.items())  # Sort by episode_key
@@ -128,6 +130,62 @@ def main():
         print(f"Error: {e}")
     except OSError as e:
         print(f"Error writing to file: {e}")
+
+def main_movies():
+    """
+    Fetches movie information from a library and writes it to a CSV file.
+    """
+
+    output_filename = "/tmp/jellyfin_movies.txt"
+
+    try:
+        with open(output_filename, "w") as outfile:
+
+            # Get user ID
+            users = req("/Users")
+            user_id = next((user["Id"] for user in users if user["Name"] == JELLYFIN_USERNAME), None)
+            if not user_id:
+                print(f"User '{JELLYFIN_USERNAME}' not found.")
+                exit(1)
+
+            # Get library ID
+            media_folders = req("/Library/MediaFolders")
+            lib_id = next((folder["Id"] for folder in media_folders["Items"] if folder["CollectionType"] == JELLYFIN_MOVIES_LIB_TYPE), None)
+            if not lib_id:
+                print(f"Library with CollectionType '{JELLYFIN_MOVIES_LIB_TYPE}' not found.")
+                exit(1)
+
+            # Write header to output file
+            outfile.write("MovieName\tPath\n")
+
+            # Get movie IDs and names
+            movies_data = req(f"/Items?isMovie=true&userId={user_id}&parentId={lib_id}")
+            log_json(movies_data)
+            input("Press Enter to continue...")
+            movie_ids_names = [(movie["Id"], movie["Name"]) for movie in movies_data["Items"]]
+            log_json(movie_ids_names)
+            input("Press and Press Enter to continue...")
+
+            for movie_id, movie_name in movie_ids_names:
+                try:
+                    movie_data = req(f"/Movies/{movie_id}?userId={user_id}&fields=Path")
+                    
+                except requests.exceptions.RequestException as e:
+                    print(f"Error fetching movie '{movie_name}' (ID: {movie_id}): {e}")
+                    input("Press Enter to scarper") 
+                    continue
+
+
+                outfile.write(f"{movie_name}\t{movie_data['Path']}\n")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error: {e}")
+    except OSError as e:
+        print(f"Error writing to file: {e}")
+
+def main():
+    #main_shows()
+    main_movies()
 
 if __name__ == "__main__":
     main()
