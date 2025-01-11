@@ -166,6 +166,7 @@ def switch_cdn(child_href):
         print(f" my child href is {len(cdn_style)} {child_href}") 
     top_of_path = urlparse(child_href).path
     add_proto = "https:" + child_href
+    add_proto = child_href
     #fname = MOVIE_NAME +  "-" + actorName + "-" + fname
     print(f" I created {fname} and will pull from {add_proto}")
     download_video(add_proto, fname)
