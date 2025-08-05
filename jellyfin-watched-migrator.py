@@ -16,7 +16,7 @@ from configobj import ConfigObj
 # #############################################################################
 # CONFIGURATION: Set the username you want to sync here.
 # #############################################################################
-TARGET_USERNAME = "YOUR_JELLYFIN_USERNAME_HERE"
+TARGET_USERNAME = "ben"
 # #############################################################################
 
 def getConfig(path, section, option):
